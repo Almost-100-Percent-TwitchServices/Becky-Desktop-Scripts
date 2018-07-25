@@ -119,11 +119,12 @@ def Tick():
 
 def Execute(data):
     """Required Execute Data function"""
-# Send training request to server ?should string parsing happen here, or on server side.  currently on server side? 
+# Send training request to server ?should string parsing happen here, or on server side.  currently on server side?
+    atBecky = '@'
     command = ' train:'
     training = [s + command for s in MySet.Nicknames]
     # Parent.Log("becky",''.join(training))
-    if any(x in data.Message for x in training):
+    if any(atBecky + x in data.Message for x in training):
         if MySet.RespondTwitch and data.IsChatMessage() and data.IsFromTwitch():
             if not MySet.OnlyLive or Parent.IsLive():
                 if MySet.DM or not data.IsWhisper():
@@ -140,25 +141,27 @@ def Execute(data):
 # new update becky alias command.  server communication code in the "if" statements pasted from training above.  Need to update custom server side response.
     command = ' nickname:'
     naming = [s + command for s in MySet.Nicknames]
-    if any(x in data.Message for x in naming):
+    if any(atBecky + x in data.Message for x in naming):
         newName = data.Message.split(command, 1)[-1]
-        MySet.Nicknames.append(newName)
-        MySet.Save(settingsFile)
+        newName = newName.strip()
+        if newName not in MySet.Nicknames:
+            MySet.Nicknames.append(newName)
+            MySet.Save(settingsFile)
+            message = ">nicknames updated<"
+        else:
+            message = ">nicknames already exists<"
+
         if MySet.RespondTwitch and data.IsChatMessage() and data.IsFromTwitch():
             if not MySet.OnlyLive or Parent.IsLive():
                 if MySet.DM or not data.IsWhisper():
-                    # request = Parent.PostRequest('https://becky-bot.herokuapp.com/',{"Host": "https://becky-bot.herokuapp.com/"},{"Message": data.Message},True)
-                    # sendBack = ast.literal_eval(request)
-                    # Parent.SendStreamMessage(MySet.BaseResponse.format(data.UserName, sendBack["response"]))
+                    Parent.SendStreamMessage(MySet.BaseResponse.format(data.UserName, message))
         if MySet.DEnabled and data.IsChatMessage() and data.IsFromDiscord():
             if not MySet.OnlyLive or Parent.IsLive():
                 if MySet.DM or not data.IsWhisper():
-                    # request = Parent.PostRequest('https://becky-bot.herokuapp.com/',{"Host": "https://becky-bot.herokuapp.com/"},{"Message": data.Message},True)
-                    # sendBack = ast.literal_eval(request)
-                    Parent.SendDiscordMessage(MySet.BaseResponse.format(data.UserName,">nickname updated<" ))
+                    Parent.SendDiscordMessage(MySet.BaseResponse.format(data.UserName,message ))
         return
 # normal talking mode, send a request to server for a response 
-    if any(x in data.Message for x in MySet.Nicknames):
+    if any(atBecky + x in data.Message for x in MySet.Nicknames):
         if MySet.RespondTwitch and data.IsChatMessage() and data.IsFromTwitch():
             if not MySet.OnlyLive or Parent.IsLive():
                 if MySet.DM or not data.IsWhisper():
